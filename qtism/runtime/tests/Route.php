@@ -997,6 +997,86 @@ class Route implements Iterator {
             throw new OutOfRangeException($msg);
         }
     }
+
+	private function getSectionMap($testPart) {
+		if ($testPart->getNavigationMode() != NavigationMode::NONLINEAR) {
+			return array();
+		}
+		
+		$returnValue = array();
+
+		foreach($testPart->getAssessmentSections() as $sectionId => $section) {
+
+			$items = array();
+			foreach($section->getSectionParts() as $itemId => $item) {
+				$resItem =  new \core_kernel_classes_Resource(strstr($item->getHref(), '|', true));
+				$items[] = array(
+					'id'    => $itemId,
+					'label' => $resItem->getLabel()
+				);
+			}
+
+			$returnValue[] = array(
+				'id'    => $sectionId,
+				'label' => $section->getTitle(),
+				'items' => $items
+			);
+		}
+
+		return $returnValue;
+	}
+    /**
+     * Get the section map for navigation between test parts, sections and items.
+     * 
+     * @param AssessmentSection $activePart The currently active test part
+     * @param array $completed An array of completed items
+     * @return array An of navigator map (parts, sections, items so on)
+     */
+    public function getNavigatorMap($activePart, $activeSection, $completed) {
+        $returnValue = array();
+        foreach($this->getTestPartMap() as $testPart) {
+			$id = $testPart->getIdentifier();
+
+            $sections = array();
+
+            if ($testPart->getNavigationMode() == NavigationMode::NONLINEAR) {
+                foreach($testPart->getAssessmentSections() as $sectionId => $section) {
+
+                    $complete = 0;
+                    $items = array();
+
+                    foreach($section->getSectionParts() as $itemId => $item) {
+                        $resItem  =  new \core_kernel_classes_Resource(strstr($item->getHref(), '|', true));
+                        $answered = isset($completed[$id][$sectionId][$itemId]);
+                        $items[]  = array(
+                            'id'    => $itemId,
+                            'answered' => $answered,
+                            'label' => $resItem->getLabel()
+                        );
+                        if ($answered) {
+                            ++$complete;
+                        }
+                    }
+
+                    $sections[] = array(
+                        'id'       => $sectionId,
+                        'active'   => $sectionId === $activeSection,
+                        'label'    => $section->getTitle(),
+                        'answered' => $complete,
+                        'items'    => $items
+                    );
+                }
+            }
+
+			$returnValue[] = array(
+				'id'       => $id,
+				'sections' => $sections,
+				'active'   => $id === $activePart
+			);
+        }
+
+        return $returnValue;
+    }
     
     /**
      * Get the RouteItem object involved in a given AssessmentItemRef.

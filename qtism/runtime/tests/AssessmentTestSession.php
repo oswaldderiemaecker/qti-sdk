@@ -2378,36 +2378,63 @@ class AssessmentTestSession extends State {
 	    $route = $this->getRoute();
 	    $oldPosition = $route->getPosition();
 	    
-	    foreach ($this->getRoute() as $routeItem) {
-	
-	        $itemSession = $this->getItemSession($routeItem->getAssessmentItemRef(), $routeItem->getOccurence());
-	
-	        if ($routeItem->getTestPart()->getNavigationMode() === NavigationMode::LINEAR) {
-	            // In linear mode, we consider the item completed if it was presented.
-	            if ($itemSession->isPresented() === true) {
-	                $numberCompleted++;
-	            }
-	        }
-	        else {
-	            // In nonlinear mode we consider: 
-	            // - an adaptive item completed if it's completion status is 'completed'.
-	            // - a non-adaptive item to be completed if it is responded.
-	            $isAdaptive = $itemSession->getAssessmentItem()->isAdaptive();
-	            
-	            if ($isAdaptive === true && $itemSession['completionStatus']->getValue() === AssessmentItemSession::COMPLETION_STATUS_COMPLETED) {
-	                $numberCompleted++;
-	            }
-	            else if ($isAdaptive === false && $itemSession->isResponded() === true) {
-	                $numberCompleted++;
-	            }
-	        }
+	    foreach ($route as $routeItem) {
+            if ($this->isCompleted($routeItem)) {
+                $numberCompleted++;
+            }
 	    }
 	    
 	    $route->setPosition($oldPosition);
 	    
 	    return $numberCompleted;
 	}
-	
+
+	/**
+	 * Obtain the items considered to be completed during the AssessmentTestSession
+	 *
+	 * @return array The item identifiers as an array
+	 */
+	public function getCompletedItems() {
+
+	    $returnValue = array();
+	    $route = $this->getRoute();
+	    $oldPosition = $route->getPosition();
+
+	    foreach ($route as $itemId => $routeItem) {
+            if ($this->isCompleted($routeItem)) {
+                $partId = $routeItem->getTestPart()->getIdentifier();
+                $sectionId = key(current($routeItem->getAssessmentSections()));
+                $itemId = $routeItem->getAssessmentItemRef()->getIdentifier();
+                $returnValue[$partId][$sectionId][$itemId] = $itemId;
+            }
+	    }
+
+	    $route->setPosition($oldPosition);
+
+	    return $returnValue;
+	}
+
+    private function isCompleted($routeItem) {
+        $itemSession = $this->getItemSession($routeItem->getAssessmentItemRef(), $routeItem->getOccurence());
+
+        if ($routeItem->getTestPart()->getNavigationMode() === NavigationMode::LINEAR) {
+            // In linear mode, we consider the item completed if it was presented.
+            if ($itemSession->isPresented() === true) {
+                return true;
+            }
+        }
+
+        // In nonlinear mode we consider: 
+        // - an adaptive item completed if it's completion status is 'completed'.
+        if ($itemSession->getAssessmentItem()->isAdaptive() === true) {
+            return $itemSession['completionStatus']->getValue() === AssessmentItemSession::COMPLETION_STATUS_COMPLETED;
+        }
+
+        // In nonlinear mode we consider: 
+        // - a non-adaptive item to be completed if it is responded.
+        return $itemSession->isResponded() === true;
+    }
+
 	/**
 	 * Transforms any exception to a suitable AssessmentTestSessionException object.
 	 * 
