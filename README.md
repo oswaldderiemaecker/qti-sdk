@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/oat-sa/qti-sdk.svg?branch=master)](https://travis-ci.org/oat-sa/qti-sdk)
+[![Build Status](https://status.continuousphp.com/git-hub/oswaldderiemaecker/qti-sdk?token=12503a0a-618a-49b8-ae34-40f53bd3610d)](https://continuousphp.com/git-hub/oswaldderiemaecker/qti-sdk)
 [![Coverage Status](https://coveralls.io/repos/oat-sa/qti-sdk/badge.png)](https://coveralls.io/r/oat-sa/qti-sdk)
 [![License GPL2](http://img.shields.io/badge/licence-gpl2-blue.svg)](http://www.gnu.org/licenses/gpl-2.0.html)
 [![Packagist Downloads](http://img.shields.io/packagist/dt/qtism/qtism.svg)](https://packagist.org/packages/qtism/qtism)
